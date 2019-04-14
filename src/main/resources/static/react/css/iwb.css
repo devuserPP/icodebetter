@@ -546,7 +546,7 @@ body {
     z-index: 2;
     transform: scale(1.1);
 }
-.card-menu .big-icon{
+.big-icon{
     position: absolute;
     font-size: 271px;
     overflow: hidden;
@@ -555,6 +555,10 @@ body {
     top: -5px;
     bottom: 0;
     right: 0;
+}
+
+.card-portlet{
+	box-shadow: 0px 2px 15px 1px rgba(69, 65, 78, 0.2);
 }
 
 .card-mini-menu{
@@ -923,4 +927,142 @@ a:hover{
 }
 .dx-rg-bs4-resizing-control {
     z-index: 0!important;
+}
+.portlet-refresh {
+	margin-top: 4px;
+    font-size: 1.2rem;
+    color: rgba(0,0,0,.4);	
+    cursor:pointer;
+}
+.gMapPopover{
+    max-width: 100%!important;
+}
+.pac-container {
+    z-index: 1070;
+}
+.gm-control-active{
+	padding: 0px!important;
+}
+/* menu right click cozum start */
+.searchFormFields>form {
+    overflow-y: auto;
+    height: 70vh;
+}
+.maingrid > .table-responsive.dx-g-bs4-table-container {
+    height: 65vh;
+}
+/* scrollBar cozum start */	
+.searchFormFields>form::-webkit-scrollbar, .scrollY::-webkit-scrollbar {
+    position: absolute;
+    width: 10px;
+    margin-left: -10px;
+    -webkit-appearance: none;
+}
+.searchFormFields>form::-webkit-scrollbar-track, .scrollY::-webkit-scrollbar-track {
+    background-color: white;
+    border-right: 1px solid #f2f2f2;
+    border-left: 1px solid #f2f2f2;
+}
+.searchFormFields>form::-webkit-scrollbar-thumb, .scrollY::-webkit-scrollbar-thumb {
+    height: 50px;
+    background-color: #e6e6e6;
+    background-clip: content-box;
+    border-color: transparent;
+    border-style: solid;
+    border-width: 1px 2px;
+}
+.table-responsive.dx-g-bs4-table-container::-webkit-scrollbar, .scrollXY::-webkit-scrollbar {
+    position: absolute; 
+    height: 9px;
+    width: 10px;
+    margin-left: -10px;
+    margin-top: -10px;
+    -webkit-appearance: none;
+}
+.table-responsive.dx-g-bs4-table-container::-webkit-scrollbar-track, .scrollXY::-webkit-scrollbar-track {
+    background-color: white;
+    border-right: 1px solid #f2f2f2;
+    border-left: 1px solid #f2f2f2;
+}
+.table-responsive.dx-g-bs4-table-container::-webkit-scrollbar-thumb, .scrollXY::-webkit-scrollbar-thumb{
+    width: 50px;
+    background-color: #e6e6e6;
+    background-clip: content-box;
+    border-color: transparent;
+    border-style: solid;
+    border-width: 1px 2px;
+}
+/* scrollBar cozum end toolbar start*/
+main.inbox > div.card-header {
+    display: flex;
+}
+.fgrow{
+    flex-grow: 1;
+}
+/* animating toolbar button */
+.hover-to-show { 
+    visibility: hidden;
+    height: 0;
+    width: 0;
+    opacity: 0;
+    transition: visibility 0s, opacity 1s linear;
+    display: inline-block;
+    padding-left:0; 
+}
+.hover-to-show-link:hover .hover-to-show{
+    visibility: visible;
+    height: auto;
+    width: auto;
+    opacity: 1;
+    padding-left:5px;
+    transition: visibility 0s, opacity 1s linear;
+}
+.overflowY-auto, .scrollY {
+    overflow-y: auto;
+}
+.overflowX-auto, .scrollX {
+    overflow-x: auto;
+}
+.shadow-sm {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+}
+
+.shadow {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.shadow-lg {
+  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
+}
+
+.shadow-none {
+  box-shadow: none !important;
+}
+
+.m--2 {
+    margin: -0.5rem !important;
+}
+
+.mt--2,
+.my--2 {
+    margin-top: -0.5rem !important;
+}
+
+.mr--2,
+.mx--2 {
+    margin-right: -0.5rem !important;
+}
+
+.mb--2,
+.my--2 {
+    margin-bottom: -0.5rem !important;
+}
+
+.ml--2,
+.mx--2 {
+    margin-left: -0.5rem !important;
+}
+
+.tab-grid nav {
+    border-right: 0 solid #d1d4d7;
 }

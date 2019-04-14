@@ -2,14 +2,12 @@ package iwb.exception;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 
 import iwb.cache.FrameworkCache;
 import iwb.cache.FrameworkSetting;
 import iwb.cache.LocaleMsgCache;
-import iwb.domain.db.Log5Base;
 import iwb.domain.db.W5Table;
 import iwb.domain.helper.W5TableRecordHelper;
 import iwb.util.GenericUtil;
@@ -38,14 +36,23 @@ public class IWBException extends RuntimeException {
 
 	public static IWBException convertToIWBException(Exception e){
 		if(e instanceof IWBException)return (IWBException)e;
-		Exception te = e;
+		if(e.getCause()==null || !(e.getCause() instanceof Exception))
+			return new IWBException("framework",e.getClass().getName(), 0, null, e.getMessage(), null);
+		
+		Exception te = e;//e.printStackTrace()
+		
 		while(te.getCause()!=null && te.getCause() instanceof Exception){
 			te = (Exception)te.getCause();
 			if(te instanceof IWBException)return (IWBException)te;
 		}
+		
 		String newObjectType = te.getClass().getName();
 		if(newObjectType.equals("org.postgresql.util.PSQLException"))newObjectType="DataBase.Exception";
-		return new IWBException("framework",newObjectType, 0, null, te.getMessage(), e.getCause());
+		
+		if(newObjectType.equals("jdk.nashorn.internal.runtime.ParserException"))newObjectType="Scripting.Parsing";
+		if(newObjectType.equals("jdk.nashorn.internal.runtime.ECMAException") || 
+				newObjectType.equals("org.graalvm.polyglot.PolyglotException"))newObjectType="Scripting.RuntTime";
+		return new IWBException("framework",newObjectType, 0, null, te.getMessage(), null);
 	}
 
 	public String toHtmlString(){
@@ -82,21 +89,21 @@ public class IWBException extends RuntimeException {
 			if(sql!=null)b.append(",\n\"sql\":\"").append(GenericUtil.stringToJS2(sql)).append("\"");
 			if(!GenericUtil.isEmpty(this.stack) && this.stack.size()>1){
 				b.append(",\n\"icodebetter\":[");
-				String lastErrorMsg="";
+				boolean q = false;
 				if(!GenericUtil.isEmpty(uri)){
-					b.append("{errorType:\"request\",objectType:\"Web.Request\",error:\"").append(uri).append("\"}");
-					lastErrorMsg = uri;					
+					b.append("{\"errorType\":\"request\",\"objectType\":\"Web.Request\",\"error\":\"").append(uri).append("\"}");
+					q = true;;					
 				}
 				for(int qi=stack.size()-1;qi>=0;qi--){
-					if(lastErrorMsg!=null && lastErrorMsg.length()>0)b.append(",");
+					if(q)b.append(","); else q=true;
 					IWBException iw = (IWBException)stack.get(qi);
 //					if(lastErrorMsg.equals(iw.getMessage()))continue;
-					lastErrorMsg = iw.getMessage();
-					b.append("{errorType:\"").append(iw.getErrorType()).append("\"");
-					if(!GenericUtil.isEmpty(iw.getMessage()))b.append(",error:\"").append(GenericUtil.stringToJS2(iw.getMessage())).append("\"");
-					if(!GenericUtil.isEmpty(iw.getSql()))b.append(",sql:\"").append(GenericUtil.stringToJS2(iw.getSql())).append("\"");
+					//lastErrorMsg = iw.getMessage();
+					b.append("{\"errorType\":\"").append(iw.getErrorType()).append("\"");
+					if(!GenericUtil.isEmpty(iw.getMessage()))b.append(",\"error\":\"").append(GenericUtil.stringToJS2(iw.getMessage())).append("\"");
+					if(!GenericUtil.isEmpty(iw.getSql()))b.append(",\"sql\":\"").append(GenericUtil.stringToJS2(iw.getSql())).append("\"");
 					if(!GenericUtil.isEmpty(iw.getObjectType())){
-						b.append(",objectType:\"").append(GenericUtil.stringToJS2(iw.getObjectType())).append("\",objectId:").append(iw.getObjectId());
+						b.append(",\"objectType\":\"").append(GenericUtil.stringToJS2(iw.getObjectType())).append("\",\"objectId\":").append(iw.getObjectId());
 					}
 					b.append("}");
 				}

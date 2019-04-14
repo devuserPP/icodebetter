@@ -17,6 +17,7 @@ import java.util.UUID;
 
 
 public class FrameworkSetting {
+	public static Map<String, String> argMap = new HashMap();
 	public static  boolean monaco = false;
 	public	static	int	rdbmsTip= 0; //0:PostgreSQL, 1: SQL Server, 2: Oracle
 	public	static	boolean	tsdbFlag= true; //Time SeriesDB
@@ -26,7 +27,7 @@ public class FrameworkSetting {
 	public final static String instanceUuid=UUID.randomUUID().toString();
 	public final static String devUuid="067e6162-3b6f-4ae2-a221-2470b63dff00";
 	public static boolean mq=false;
-	public static boolean cloud=true;
+	public static boolean cloud=false;
 	public static boolean debug=true;
 	public static boolean chat=true;
 	public static boolean sms=true;
@@ -63,14 +64,14 @@ public class FrameworkSetting {
 	public static String crudLogSchema="promis_log";
 	public static String crudLogTablePrefix="";
 	public static String revisionLogTablePrefix="rev_";
-	final public static String[] postQueryGridImgMap = new String[]{"checked.png","record_security.png","paperclip-16.png","comments-16.png","keyword.png","approval-16.png","mail.gif","picture.png","revision.png","vcsw-16.png"};
+	final public static String[] postQueryGridImgMap = new String[]{"checked.png","record_security.png","paperclip-16.png","comments-16.png","keyword.png","approval-16.png","mail.gif","picture.png","revision.png",".ivcs-icon"};
 	final public static String[] postQueryGridImgMap4Webix = new String[]{"check","key","cloud-download","comment-o","key","puzzle-piece","mail-forward","file-picture-o","history","git"};
 	public static final String bulkOperatorPostfix = "_opr_Zz_qw_";
 	public static final boolean logGeoPos = true;
 
 //	final public static Map<String, OnlineUserBean> lastUserAction= new HashMap<String, OnlineUserBean>();
 
-	public static int preloadWEngine = 0;
+//	public static int preloadWEngine = 0;
 	public static int cacheStatus = 0;
 //	public static String formBodyColor = null;
 	public static String formCellColor = null;
@@ -107,7 +108,7 @@ public class FrameworkSetting {
 	public static boolean projectAccessControl = true;
 	public static boolean log2tsdb = false;
 
-	public static int logType = 1;
+	public static int logType = 0;
 
 	public static String log2tsdbUrl = "http://localhost:8086";
 	public static String log2tsdbDbName = "icb_log";
@@ -141,5 +142,8 @@ public class FrameworkSetting {
     //@Value(value = "${com.auth0.clientSecret}")
 	public static  String clientSecret = "U5qMXxnQ9jr2Hm7AGg7COwikaWGcOhl28fLpVfUEqe6_bVjJ1A2FnWCbmjNN8BzR";
 	public static boolean showOnlineStatus = true;
+	
+	public static boolean redisCache = false;
+	public static String redisHost = "localhost";//"35.226.30.186"; //
 
 }

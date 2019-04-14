@@ -1,8 +1,175 @@
 Ext.ns("Ext.ux.form");
+async function fetchColumns(table_name) {
+	try{
+		let response = await fetch("ajaxQueryData?_qid=4809&table_name="+table_name);
+		let columns = await response.json();		
+		return columns.data;
+	} catch(error) {
+		console.log(error);
+	}
+}
+var defineSQLCompletionItemProvider = {		
+		triggerCharacters:['.'],
+	    provideCompletionItems: (model, position) => {	    	
+	    	try{	    		
+	    		var textUntilPosition = model.getValueInRange({startLineNumber: 1, startColumn: 1, endLineNumber: position.lineNumber, endColumn: position.column});
+	    		var leftRight = false;
+	    		var notList = false;
+	    		var target = '';
+	    		var noBreakLines = textUntilPosition.replace(/\r?\n|\r/g, "");
+	    		var section = '';
+	    		if(textUntilPosition.search(/order by/i) >= 0){	
+	    			section = noBreakLines.split(/order by/i);	
+	    		} else if (textUntilPosition.search(/group by/i) >= 0) {	
+	    			section = noBreakLines.split(/group by/i);
+	    		} else if (textUntilPosition.search(/where/i) >= 0) {
+	    			section = noBreakLines.split(/where/i);
+	    			notList = true;
+	    		} else {
+	    			let text = model.getValue();
+	    			noBreakLines = text.replace(/\r?\n|\r/g, "");
+	    			section = noBreakLines.split(/select/i);
+	    			leftRight = true;
+	    		}
+	    		var x = section[1].split('.');
+	    		target = x[0].trim();
 
+	    		//console.log(target);
+	    		var sectionSide = leftRight ? section[1] : section[0];
+	    		if(sectionSide.search(/where/i) >= 0){
+	    			let noWhere = sectionSide.split(/where/i);
+	    			sectionSide = noWhere;
+	    		}
+
+	    		var splitFrom = notList ? sectionSide.split(/from/i) : sectionSide[0].split(/from/i);
+	    		var noComments = splitFrom[1].replace(/(\/\*[^*]*\*\/)|(\/\/[^*]*)/g, '');
+	    		var withSpace = noComments.replace(target, "");
+	    		var tableName = withSpace.trim();
+	    		if (tableName.includes('.')) {
+	    			var schemaTable = tableName.split('.');
+	    			tableName = schemaTable[1];
+	    		}
+	    		//console.log(tableName);
+		    	
+		    	
+		    	var promise = fetchColumns(tableName);
+		    	//console.log(promise);
+		    	
+		    	return promise.then((columnArray)=> {
+			    	var completionList = [];		    	
+			    	for (var i = 0; i < columnArray.length; i++) {
+			    		var obj = {};
+			    		obj.label = columnArray[i].column_name;obj.detail = columnArray[i].data_type;
+			    		obj.kind = monaco.languages.CompletionItemKind.Function;
+			    		obj.insertText = columnArray[i].column_name;	    		
+			    		completionList.push(obj);
+			    	}
+			    	//console.log(completionList);
+			    	return completionList;
+		    	});	    
+	    		
+	    	} catch(error) {
+	    		console.log(error);
+	    	}		    	
+	    }
+}
+var defineJSCompletionItemProvider = {
+    triggerCharacters:['$'],
+    provideCompletionItems: (model, position) => {
+      return [
+        {
+          label: '$.getTableJSON',
+          kind: monaco.languages.CompletionItemKind.Function,
+          documentation: "Load Table Record as JSON",
+          detail: 'JSON',insertText:'$.getTableJSON("table_name",pk)'
+        },
+        {
+          label: '$.postForm',
+          kind: monaco.languages.CompletionItemKind.Function,
+          documentation: "Post Form",
+          detail: 'W5FormResult',insertText:'$.postForm(formId,action,{params})'
+        },
+        {
+          label: '$.sqlQuery',
+          kind: monaco.languages.CompletionItemKind.Function,
+          documentation: "Run SELECT SQL",
+          detail: 'Array',insertText:'$.sqlQuery("SELECT * FROM x WHERE y", {params})'
+        },
+        {
+          label: '$.query',
+          kind: monaco.languages.CompletionItemKind.Function,
+          documentation: "Run iCodeBetter Query",
+          detail: 'Array',insertText:'$.query(queryId, {params})'
+        },
+        {
+          label: '$.sqlExecute',
+          kind: monaco.languages.CompletionItemKind.Function,
+          documentation: "Execute INSERT/UPDATE/DELETE SQL",
+          detail: 'int',insertText:'$.sqlExecute("UPDATE x set y WHERE z", {params})'
+        },
+        {
+          label: '$.execFunc',
+          kind: monaco.languages.CompletionItemKind.Function,
+          documentation: "Execute iCodeBetter Global Funcction",
+          detail: 'W5GlobalFuncResult',insertText:'$.execFunc(globalFuncId, {params})'
+        },
+        {
+          label: '$.REST',
+          kind: monaco.languages.CompletionItemKind.Function,
+          documentation: "Call REST Method",
+          detail: 'Map',insertText:'$.REST("serviceName.methodName", {params})'
+        },
+        {
+            label: '$.console',
+            kind: monaco.languages.CompletionItemKind.Function,
+            documentation: "Console",
+            detail: 'null',insertText:'$.console("Hellow World", "Warning", "warn")'
+        },
+        {
+            label: '$.redisPut',
+            kind: monaco.languages.CompletionItemKind.Function,
+            documentation: "Redist PUT",
+            detail: 'null',insertText:'$.redisPut("host", "key", {})'
+        },
+        {
+            label: '$.redisGet',
+            kind: monaco.languages.CompletionItemKind.Function,
+            documentation: "Redist GET String",
+            detail: 'null',insertText:'$.redisGet("host", "key")'
+	    },
+	    {
+	        label: '$.redisGetJSON',
+	        kind: monaco.languages.CompletionItemKind.Function,
+	        documentation: "Redist GET JSON",
+	        detail: 'null',insertText:'$.redisGetJSON("host", "key")'
+	    },
+	    {
+	        label: '$.mqBasicPublish',
+	        kind: monaco.languages.CompletionItemKind.Function,
+	        documentation: "RabbitMQ Publish",
+	        detail: 'null',insertText:'$.mqBasicPublish("host", "queueName", "msg")'
+	    }
+	    
+	    
+      ];
+    }
+  };
+/*
+function sqlFmt(sql){
+    var url = "ajaxFormatSQL?sql=" + encodeURIComponent(sql);
+    return fetch(url).then((response)=>{
+    	var f = response.text();
+    	return f;
+    	console.log('aa',f)
+    	f = eval('('+f+')');
+    	console.log('bb',f)
+      return f.result;
+    });
+  };*/
+  
 Ext.ux.form.Monaco = Ext.extend(Ext.BoxComponent, {
   value: null,
-  language: "javascript",
+  language: "javascript",html:'<span style="color:#ce9178">Loading Monaco Editor...<\span>',
 
   initComponent: function() {
     Ext.ux.form.Monaco.superclass.initComponent.apply(this, arguments);
@@ -13,11 +180,20 @@ Ext.ux.form.Monaco = Ext.extend(Ext.BoxComponent, {
           var self = this;
           require.config({ paths: { vs: "/monaco/min/vs" } });
           require(["vs/editor/editor.main"], function() {
-            self.editor = monaco.editor.create(self.el.dom, {
-              value: self.value,
-              language: self.language
-            });
-            monaco.editor.setTheme("vs-dark");
+	    	  self.el.dom.innerHTML='';
+	    	  self.editor = monaco.editor.create(self.el.dom, {
+	              value: self.value,
+	              language: self.language
+	            });
+	    	  monaco.editor.setTheme(iwb.monacoTheme || "vs-dark");
+	    	  if(defineJSCompletionItemProvider && self.language=='javascript'){
+	    		  monaco.languages.registerCompletionItemProvider('javascript', defineJSCompletionItemProvider);
+	    		  defineJSCompletionItemProvider=false;
+	    	  }
+	    	  if(defineSQLCompletionItemProvider && self.language=='sql'){
+	    		  monaco.languages.registerCompletionItemProvider('sql',defineSQLCompletionItemProvider);
+	    		  defineSQLCompletionItemProvider=false;
+	    	  }
             /*
           console.log("element: ", self.getEl());
           console.log("ownerCt: ", self.ownerCt);
@@ -25,13 +201,19 @@ Ext.ux.form.Monaco = Ext.extend(Ext.BoxComponent, {
           console.log("self.editor: ", self.editor);
           */
             var containerHeight = self.ownerCt.container.dom.clientHeight;
+//            console.log('containerHeight',containerHeight)
+            var containerWidth = self.ownerCt.container.dom.clientWidth;
 
-            if (containerHeight < 500) {
-              containerHeight = 500;
-              self.ownerCt.setHeight(500);
-              self.ownerCt.container.setHeight(500);
+            if (containerHeight < 300) {// || containerWidth < 500 
+              containerHeight = 300;
+//              containerWidth = 500;
+              self.ownerCt.setHeight(300);
+        //      self.ownerCt.setWidth(500);
+              self.ownerCt.container.setHeight(300);
+       //       self.ownerCt.container.setWidth(500);
             }
             self.setHeight(containerHeight);
+      //      self.setWidth(containerWidth);
             self.editor.layout();
 
             var itemLength = self.ownerCt.items.items.length;
@@ -72,8 +254,15 @@ Ext.ux.form.Monaco = Ext.extend(Ext.BoxComponent, {
 
             window.onresize = function() {
               self.editor.layout();
-              containerHeight = self.ownerCt.container.dom.clientHeight;
+              if(self.ownerCt.container != null){
+            	  containerHeight = self.ownerCt.container.dom.clientHeight;
+                  self.setHeight(containerHeight);
+              }
+/*              containerHeight = self.ownerCt.container.dom.clientHeight;
+              containerWidth = self.ownerCt.container.dom.clientWidth;
               self.setHeight(containerHeight);
+              self.setWidth(containerWidth);
+*/
               self.editor.layout();
             };
           });

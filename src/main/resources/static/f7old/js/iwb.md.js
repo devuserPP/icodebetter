@@ -1,11 +1,11 @@
 iwb.mobile=2;
-iwb.longPoll.strategy=1;
+iwb.longPoll.strategy=0;
 
 
 
 iwb.onPause=function(aq){//asagi atilinca
 	   setTimeout(function() {
-			iwb.longPoll.end();
+//			iwb.longPoll.end();
 			iwb.updateBackendMobileStatus(2);
 		}, 0);
 }
@@ -77,7 +77,7 @@ function onDeviceReady(){
 //				iwb.gcmId=data.registrationId;
 				iwb.deviceId=data.registrationId;
 				iwb.webPageId=data.registrationId;
-				iwb.longPoll.init('../async/ajaxNotifications?&.w=' + iwb.webPageId, iwbLP);
+//				iwb.longPoll.init('../async/ajaxNotifications?&.w=' + iwb.webPageId, iwbLP);
 //				if(iwb.debug){console.log('iwb-push-registration');console.log(data.registrationId);}
 				iwb.checkSession({callback:iwb.prepareMainMenu});
 		});
@@ -102,7 +102,7 @@ document.addEventListener("deviceready",onDeviceReady,false);
 
 // Init App
 iwb.app = new Framework7({
-    modalTitle: iwb.logo(40), cache:false,animatePages:true,sortable:false,//swipeout:false,
+    modalTitle: iwb.logo(40), cache:false,animatePages:false,sortable:false,//swipeout:false,
     material: true, materialPageLoadDelay:100,
     preprocess: function (content, url, next, aq) {
     	if(iwb.debug)console.log('preprocess: ' + url);
@@ -119,7 +119,7 @@ iwb.app = new Framework7({
     				return r || j.htmlPage;
     			} else switch(j.errorType){
     			case	'session':
-    				iwb.longPoll.end();
+//    				iwb.longPoll.end();
     				iwb.app.loginScreen();
     				return;
     			default:
@@ -128,7 +128,7 @@ iwb.app = new Framework7({
     				return;
     			}
     		}  
-		}catch(e){if(iwb.debug && confirm('ERROR form.JS!!! Throw?'))throw e;}
+		}catch(e){if(iwb.debug && confirm('ERROR form.JS!!! Throw? ' + e.message))throw e;}
     	return content;
     },
     preroute: function (view, options) {
@@ -136,7 +136,7 @@ iwb.app = new Framework7({
     	if(iwb.serverUrl && options.url && (options.url.indexOf('showM')==0/* || options.url.indexOf('ajax')==0*/)){
     		var url=options.url;
 //    		var t = iwb.addRequest(false);
-            view.router.load({url:iwb.serverUrl+url+'&.r='+Math.random(), reload:url.indexOf('showM')==0 && url.indexOf('_reload=1')>-1,force: true, ignoreCache:true/*,animatePages:false*/}); //load another page with auth form
+            view.router.load({url:iwb.serverUrl+url+'&.r='+Math.random(), reload:url.indexOf('showM')==0 && url.indexOf('_reload=1')>-1,force: true, ignoreCache:true,animatePages:true}); //load another page with auth form
             return false; //required to prevent default router action
     	}
     }
@@ -344,7 +344,7 @@ $$(document).on('pageInit', function (e) {
 	if(iwb.debug){console.log('pageInit');console.log(page);}
 	
 	if(iwb.lastLiveSyncPk && (!page.name || page.name.indexOf('smart-select')<0) && (!page.name || page.name.indexOf('messages-')!=0) && page.id!='idx-list-14'){//TODO.hata var, gereksiz yere donuyor
-		iwb.request({url:'ajaxLiveSync?.a=2&.t=' + iwb.webPageId +  '-f-'+  iwb.liveSyncRecord.fId + '&.w=' + iwb.webPageId + '&.pk=' +  iwb.lastLiveSyncPk});
+//		iwb.request({url:'ajaxLiveSync?.a=2&.t=' + iwb.webPageId +  '-f-'+  iwb.liveSyncRecord.fId + '&.w=' + iwb.webPageId + '&.pk=' +  iwb.lastLiveSyncPk});
 		iwb.lastLiveSyncPk = false;
 	}
 
@@ -584,8 +584,8 @@ $$(document).on('pageInit', function (e) {
 			if(json4.liveSync){
 				iwb.lastLiveSyncPk = json4.crudTableId + '-'+ getPk(json4.pk);
 				iwb.liveSyncRecord.fId=json4.formId;
-				if(iwb.longPoll.strategy==2)iwb.longPoll.start();
-				iwb.request({url:'ajaxLiveSync?.a=10&.t=' + iwb.webPageId + '-f-'+  iwb.liveSyncRecord.fId + '&.w=' + iwb.webPageId + '&.pk=' +  iwb.lastLiveSyncPk});
+//				if(iwb.longPoll.strategy==2)iwb.longPoll.start();
+//				iwb.request({url:'ajaxLiveSync?.a=10&.t=' + iwb.webPageId + '-f-'+  iwb.liveSyncRecord.fId + '&.w=' + iwb.webPageId + '&.pk=' +  iwb.lastLiveSyncPk});
 			}
 			if(json4.liveSyncBy){
 				iwb.app.addNotification({closeOnClick:true,title:user4chat(json4.liveSyncBy[0]), media:user4media(json4.liveSyncBy[0]),message:liveSyncHtml(json4.liveSyncBy), hold:8000});
@@ -600,57 +600,9 @@ $$(document).on('pageInit', function (e) {
 });
 
 
-
-
-iwb.autoCompleteJson={
-    openIn: 'page', //open in page
-//    opener: $$('#autocomplete-standalone-ajax'), //link that opens autocomplete
-//    multiple: true, //allow multiple values
-//  limit: 50,
-    valueProperty: 'id', //object's "value" property name
-    textProperty: 'dsc', //object's "text" property name
-    preloader: true, //enable preloader
-    source: function (autocomplete, query, render) {
-        var results = [];
-        if (query.length === 0) {
-            render(results);
-            return;
-        }
-        // Show Preloader
-        autocomplete.showPreloader();
-        // Do Ajax request to Autocomplete data
-        iwb.request({
-            url: 'ajaxQueryData?'+this.params,
-//            method: 'GET', dataType: 'json',
-            //send "query" to server. Useful in case you generate response dynamically
-            data: {
-                xdsc: query
-            },
-            success: function (j) {
-                // Hide Preoloader
-                autocomplete.hidePreloader();
-                // Render items by passing array with result items
-                render(j.data);
-            }
-        });
-    },
-    onChange: function (autocomplete, value) {
-        var itemText = [],
-            inputValue = [];
-        for (var i = 0; i < value.length; i++) {
-            itemText.push(value[i][this.textProperty]);
-            inputValue.push(value[i][this.valueProperty]);
-        }
-        // Add item text value to item-after
-        this.opener.find('.item-after').text(itemText.join(', '));
-        // Add item value to input value
-        this.opener.find('input').val(inputValue.join(','));
-    }
-}
-
 $$('#idx-main-menu-logo').html(iwb.logo(29));
 
 genTplOUsers();
 
-iwb.longPoll.init('../async/ajaxNotifications?&.w=' + iwb.webPageId, iwbLP);
+//iwb.longPoll.init('../async/ajaxNotifications?&.w=' + iwb.webPageId, iwbLP);
 iwb.checkSession({callback:iwb.prepareMainMenu});

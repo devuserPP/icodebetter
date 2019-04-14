@@ -2,11 +2,9 @@ package iwb.domain.result;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 
 import org.json.JSONException;
 
@@ -17,8 +15,6 @@ import iwb.domain.db.W5Query;
 import iwb.domain.db.W5QueryField;
 import iwb.domain.db.W5QueryParam;
 import iwb.domain.db.W5Table;
-import iwb.domain.db.W5TableAccessConditionSql;
-import iwb.domain.db.W5TableChild;
 import iwb.domain.db.W5TableField;
 import iwb.domain.db.W5TableFilter;
 import iwb.domain.db.W5TableParam;
@@ -211,7 +207,7 @@ public class W5QueryResult implements W5MetaResult{
 	    	StringBuilder sqlWhere= new StringBuilder();
 	    	List sqlParams= new ArrayList<Object>();
 	    	
-	    	for(W5QueryParam p1 : getQuery().get_queryParams())if(p1.getTabOrder()>=tabOrderCount && p1.getTabOrder()<tabOrderCount+1000){
+	    	if(!GenericUtil.isEmpty(getQuery().get_queryParams()))for(W5QueryParam p1 : getQuery().get_queryParams())if(p1.getTabOrder()>=tabOrderCount && p1.getTabOrder()<tabOrderCount+1000){
 				String pexpressionDsc = p1.getExpressionDsc();
 	    		if((p1.getOperatorTip()==8 || p1.getOperatorTip()==9) && p1.getSourceTip()==1){
 	    			String value = requestParams2.get(p1.getDsc()); 
@@ -625,7 +621,7 @@ public class W5QueryResult implements W5MetaResult{
 		Locale xlocale = new Locale(FrameworkCache.getAppSettingStringValue(scd, "locale","en"));
 		List<W5QueryParam> pqs = null;
 		pqs=getQuery().get_queryParams();
-    	for(W5QueryParam p1 : pqs){
+    	if(!GenericUtil.isEmpty(pqs))for(W5QueryParam p1 : pqs){
 			String pexpressionDsc = p1.getExpressionDsc();
     		if((p1.getOperatorTip()==8 || p1.getOperatorTip()==9) && p1.getSourceTip()==1){
     			String value = requestParams2.get(p1.getDsc()); 
@@ -981,7 +977,7 @@ public class W5QueryResult implements W5MetaResult{
 				if((approvalStepIds==null || approvalStepIds.length()==0) && mainTable.get_approvalMap().get((short)3)!=null)approvalStepIds = requestParams2.get("_approval_step_ids3");//delete icin
 				if(approvalStepIds!=null && approvalStepIds.length()>0){
 					if(sqlWhere.length()>0)sqlWhere.append(" AND");
-					sqlWhere.append(" exists(select 1 from iwb.w5_approval_record rz, (select * from iwb.tool_parse_numbers(?,',')) t where rz.customization_id=? AND rz.table_id=? AND rz.table_pk=x."+query.get_queryFields().get(0).getDsc()+" AND t.satir=rz.approval_step_id) ");
+					sqlWhere.append(" exists(select 1 from iwb.w5_approval_record rz, (select * from iwb.tool_parse_numbers(?,',')) t where rz.customization_id=? AND rz.table_id=? AND rz.table_pk=x."+query.get_queryFields().get(0).getDsc()+" AND t.satir::integer=rz.approval_step_id) ");
 					sqlParams.add(approvalStepIds);
 					sqlParams.add(scd.get("customizationId"));
 					sqlParams.add(query.getMainTableId());
@@ -1458,7 +1454,7 @@ public class W5QueryResult implements W5MetaResult{
 				if((approvalStepIds==null || approvalStepIds.length()==0) && mainTable.get_approvalMap().get((short)3)!=null)approvalStepIds = requestParams2.get("_approval_step_ids3");//delete icin
 				if(approvalStepIds!=null && approvalStepIds.length()>0){
 					if(sqlWhere.length()>0)sqlWhere.append(" AND");
-					sqlWhere.append(" exists(select 1 from iwb.w5_approval_record rz, (select * from dbo.tool_parse_numbers(?,',')) t where rz.customization_id=? AND rz.table_id=? AND rz.table_pk=x."+query.get_queryFields().get(0).getDsc()+" AND t.satir=rz.approval_step_id) ");
+					sqlWhere.append(" exists(select 1 from iwb.w5_approval_record rz, (select * from dbo.tool_parse_numbers(?,',')) t where rz.customization_id=? AND rz.table_id=? AND rz.table_pk=x."+query.get_queryFields().get(0).getDsc()+" AND t.satir::integer=rz.approval_step_id) ");
 					sqlParams.add(approvalStepIds);
 					sqlParams.add(scd.get("customizationId"));
 					sqlParams.add(query.getMainTableId());
@@ -1879,7 +1875,7 @@ public class W5QueryResult implements W5MetaResult{
 				if((approvalStepIds==null || approvalStepIds.length()==0) && mainTable.get_approvalMap().get((short)3)!=null)approvalStepIds = requestParams2.get("_approval_step_ids3");//delete icin
 				if(approvalStepIds!=null && approvalStepIds.length()>0){
 					if(sqlWhere.length()>0)sqlWhere.append(" AND");
-					sqlWhere.append(" exists(select 1 from iwb.w5_approval_record rz, (select * from iwb.tool_parse_numbers(?,',')) t where rz.customization_id=? AND rz.table_id=? AND rz.table_pk=x."+query.get_queryFields().get(0).getDsc()+" AND t.satir=rz.approval_step_id) ");
+					sqlWhere.append(" exists(select 1 from iwb.w5_approval_record rz, (select * from iwb.tool_parse_numbers(?,',')) t where rz.customization_id=? AND rz.table_id=? AND rz.table_pk=x."+query.get_queryFields().get(0).getDsc()+" AND t.satir::integer=rz.approval_step_id) ");
 					sqlParams.add(approvalStepIds);
 					sqlParams.add(scd.get("customizationId"));
 					sqlParams.add(query.getMainTableId());

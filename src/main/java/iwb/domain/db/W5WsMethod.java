@@ -9,7 +9,10 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import org.hibernate.annotations.Immutable;
+
 @Entity
+@Immutable
 @Table(name="w5_ws_method",schema="iwb")
 public class W5WsMethod  implements java.io.Serializable {
 
@@ -18,7 +21,7 @@ public class W5WsMethod  implements java.io.Serializable {
 	private String dsc;
 	private String realDsc;
 	private short callMethodTip;
-	private String uid;
+	private short postUrlFlag;
 	private W5Ws _ws;
 	private short accessExecuteTip;
 	private	short paramSendTip;
@@ -61,14 +64,6 @@ public class W5WsMethod  implements java.io.Serializable {
 	}
 	public void setDsc(String dsc) {
 		this.dsc = dsc;
-	}
-	
-	@Column(name="uid")
-	public String getUid() {
-		return uid;
-	}
-	public void setUid(String uid) {
-		this.uid = uid;
 	}
 	
 	@Transient
@@ -151,6 +146,14 @@ public class W5WsMethod  implements java.io.Serializable {
 
 	public void setProjectUuid(String projectUuid) {
 		this.projectUuid = projectUuid;
+	}
+
+	@Column(name="post_url_flag")
+	public short getPostUrlFlag() {
+		return postUrlFlag;
+	}
+	public void setPostUrlFlag(short postUrlFlag) {
+		this.postUrlFlag = postUrlFlag;
 	}
 	
 }

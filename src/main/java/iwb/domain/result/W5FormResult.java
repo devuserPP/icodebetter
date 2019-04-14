@@ -5,13 +5,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import iwb.cache.FrameworkCache;
-import iwb.domain.db.W5WorkflowRecord;
-import iwb.domain.db.W5WorkflowStep;
 import iwb.domain.db.W5ConvertedObject;
 import iwb.domain.db.W5Form;
 import iwb.domain.db.W5FormCell;
 import iwb.domain.db.W5FormSmsMailAlarm;
+import iwb.domain.db.W5WorkflowRecord;
+import iwb.domain.db.W5WorkflowStep;
 import iwb.domain.helper.W5FormCellHelper;
 import iwb.domain.helper.W5QueuedActionHelper;
 import iwb.domain.helper.W5QueuedPushMessageHelper;
@@ -46,6 +45,7 @@ public class W5FormResult implements W5MetaResult{
 	private	W5QueryResult queryResult4FormCell;
 	private	List<W5FormCell> extraFormCells;
 	private Map<Integer,W5GridResult> moduleGridMap;
+	private Map<Integer,M5ListResult> moduleListMap;
 	private String uniqueId;
 	private List<W5QueuedActionHelper> queuedActionList;
 	private List<W5QueuedPushMessageHelper> queuedPushMessageList;
@@ -55,6 +55,12 @@ public class W5FormResult implements W5MetaResult{
 	private Map<Integer,Map<Integer, Integer>> mapWidgetCount; //userId, widgetId, count
 	private List<W5FormSmsMailAlarm> formAlarmList;
 
+	public Map<Integer, M5ListResult> getModuleListMap() {
+		return moduleListMap;
+	}
+	public void setModuleListMap(Map<Integer, M5ListResult> moduleListMap) {
+		this.moduleListMap = moduleListMap;
+	}
 	public W5FormResult(int formId) {
 		this.formId=formId;
 	}

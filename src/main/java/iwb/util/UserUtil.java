@@ -7,7 +7,6 @@ package iwb.util;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -667,6 +666,7 @@ public class UserUtil {
 			String sessionId, String webPageId, String tabId){
 		if(userId==0 ||  webPageId==null || tabId==null)return null;
 		CachedUserBean3 cub = getCachedUserBean(userId);
+		if(cub==null)return null;
 		
 		if(sessionId==null)sessionId = cub.findSessionIdFromWebPageId(webPageId);
 		if(sessionId==null)return null;
@@ -1254,6 +1254,7 @@ public class UserUtil {
 		List<Object[]> data=new ArrayList<Object[]>();
 		if(projectMap3.get(projectId)!=null)for(Integer key : projectMap3.get(projectId)){
 			CachedUserBean3 cub = userMap3.get(key);
+			if(cub==null)continue;
 			boolean found = false;
 			if(cub.getSyncSessionMap()!=null && key!=userId && cub.getChatStatusTip()!=0){
 				Map<String, SyncSessionMapHelper3> m = cub.getSyncSessionMap();
@@ -1517,8 +1518,14 @@ public class UserUtil {
 					newScd.putAll(scd);
 					newScd.put("customizationId",po.getCustomizationId());
 					newScd.put("projectId",po.getProjectUuid());newScd.put("projectName", po.getDsc());newScd.put("roleId",999999);
+					int deviceType = GenericUtil.uInt(request, "d");
+					if(deviceType==0)deviceType = po.getUiWebFrontendTip();
+					else {
+						scd.put("mobile", deviceType);
+						scd.put("mobileDeviceId", request.getParameter("_mobile_device_id"));
+					}
 					newScd.put("renderer", po.getUiWebFrontendTip());
-					newScd.put("_renderer", GenericUtil.getRenderer(po.getUiWebFrontendTip()));
+					newScd.put("_renderer", GenericUtil.getRenderer(deviceType));
 					newScd.put("mainTemplateId", po.getUiMainTemplateId());
 					newScd.put("path", "../");
 					newScd.put("userTip",po.get_defaultUserTip());
@@ -1598,7 +1605,14 @@ public class UserUtil {
 			session.setAttribute(scdKey, scd);
 			return scd;
 		}
-		return (Map<String, Object>)session.getAttribute(scdKey);
+		
+		Map<String, Object> scd = (Map<String, Object>)session.getAttribute(scdKey);
+		if(!GenericUtil.safeEquals(pid, scd.get("projectId"))) {
+			throw new IWBException("session","No Session",0,null, "No valid session", null);
+		}
+		
+		
+		return scd;
 	}
 	public static String generateTokenFromScd(Map<String, Object> scd, int integrationObjectId, String ip, int validTimeMillis) {
 		String qq = ""+(System.currentTimeMillis()+validTimeMillis)+"-"+scd.get("customizationId")+"-"+scd.get("userId")+"-"+scd.get("roleId")+"-"+scd.get("userRoleId")+"-"+scd.get("userTip")+"-"+scd.get("locale")+"-"+integrationObjectId+"-"+ip;

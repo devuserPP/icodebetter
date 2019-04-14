@@ -14,10 +14,11 @@ import iwb.cache.FrameworkCache;
 import iwb.cache.FrameworkSetting;
 import iwb.cache.LocaleMsgCache;
 import iwb.domain.db.Log5Feed;
-import iwb.domain.db.W5Workflow;
+import iwb.domain.db.W5BIGraphDashboard;
+import iwb.domain.db.W5Card;
+import iwb.domain.db.W5Component;
 import iwb.domain.db.W5Conversion;
 import iwb.domain.db.W5ConvertedObject;
-import iwb.domain.db.W5DataView;
 import iwb.domain.db.W5Detay;
 import iwb.domain.db.W5Form;
 import iwb.domain.db.W5FormCell;
@@ -32,26 +33,28 @@ import iwb.domain.db.W5LookUp;
 import iwb.domain.db.W5LookUpDetay;
 import iwb.domain.db.W5ObjectMenuItem;
 import iwb.domain.db.W5ObjectToolbarItem;
+import iwb.domain.db.W5Page;
+import iwb.domain.db.W5PageObject;
 import iwb.domain.db.W5Query;
 import iwb.domain.db.W5QueryField;
 import iwb.domain.db.W5QueryParam;
 import iwb.domain.db.W5Table;
 import iwb.domain.db.W5TableField;
-import iwb.domain.db.W5Page;
-import iwb.domain.db.W5PageObject;
 import iwb.domain.db.W5Tutorial;
+import iwb.domain.db.W5Workflow;
+import iwb.domain.db.W5WorkflowStep;
 import iwb.domain.helper.W5CommentHelper;
 import iwb.domain.helper.W5FormCellHelper;
 import iwb.domain.helper.W5TableChildHelper;
 import iwb.domain.helper.W5TableRecordHelper;
-import iwb.domain.result.W5DataViewResult;
-import iwb.domain.result.W5GlobalFuncResult;
+import iwb.domain.result.W5CardResult;
 import iwb.domain.result.W5FormResult;
+import iwb.domain.result.W5GlobalFuncResult;
 import iwb.domain.result.W5GridResult;
 import iwb.domain.result.W5ListViewResult;
+import iwb.domain.result.W5PageResult;
 import iwb.domain.result.W5QueryResult;
 import iwb.domain.result.W5TableRecordInfoResult;
-import iwb.domain.result.W5PageResult;
 import iwb.domain.result.W5TutorialResult;
 import iwb.enums.FieldDefinitions;
 import iwb.exception.IWBException;
@@ -292,7 +295,7 @@ public class React16 implements ViewAdapter {
 			} else if (formResult.getAction() == 1) { // edit
 				s.append(",\n pk:").append(GenericUtil.fromMapToJsonString(formResult.getPkFields()));
 				if(t.getAccessDeleteTip()==0 || !GenericUtil.isEmpty(t.getAccessDeleteUserFields()) || GenericUtil.accessControl(scd, t.getAccessDeleteTip(), t.getAccessDeleteRoles(), t.getAccessDeleteUsers()))s.append(", deletable:!0");
-				if (liveSyncRecord) {
+				if (false && liveSyncRecord) {
 					s.append(", liveSync:true");
 					String webPageId = formResult.getRequestParams().get(".w");
 					if (webPageId != null) {
@@ -380,20 +383,14 @@ public class React16 implements ViewAdapter {
 							s.append("{\"xid\":")
 									.append(fsm.getFormSmsMailId())
 									.append(",\"text\":\"")
-									.append(fsm.getSmsMailTip() == 0 ? "[<b>SMS</b>] "
-											: "[<b>"
-													+ (LocaleMsgCache.get2(
-															customizationId,
-															xlocale,
-															"email_upper"))
-													+ "</b>] ")
+//									.append(fsm.getSmsMailTip() == 0 ? "[SMS] ": "[" + (LocaleMsgCache.get2( customizationId,xlocale, "email_upper")) + "] ")
 									.append(LocaleMsgCache.get2(
 											customizationId, xlocale,
 											fsm.getDsc()))
-									.append(fsm.getPreviewFlag() != 0 ? " (<i>"
+									.append(fsm.getPreviewFlag() != 0 ? " ("
 											+ (LocaleMsgCache.get2(
 													customizationId, xlocale,
-													"with_preview")) + "</i>)"
+													"with_preview")) + ")"
 											: "")
 									.append("\",\"checked\":")
 									.append(fsm.getSmsMailSentTip() == 1
@@ -457,21 +454,15 @@ public class React16 implements ViewAdapter {
 								s.append("{\"xid\":")
 										.append(fsm.getFormSmsMailId())
 										.append(",\"text\":\"")
-										.append(fsm.getSmsMailTip() == 0 ? "[<b>SMS</b>] "
-												: "[<b>"
-														+ (LocaleMsgCache
-																.get2(customizationId,
-																		xlocale,
-																		"email_upper"))
-														+ "</b>] ")
+//										.append(fsm.getSmsMailTip() == 0 ? "[SMS] " : "["+ (LocaleMsgCache.get2(customizationId, xlocale, "email_upper")) + "] ")
 										.append(GenericUtil.stringToJS(fsm
 												.getDsc()))
-										.append(fsm.getPreviewFlag() != 0 ? " (<i>"
+										.append(fsm.getPreviewFlag() != 0 ? " ("
 												+ (LocaleMsgCache
 														.get2(customizationId,
 																xlocale,
 																"with_preview"))
-												+ "</i>)"
+												+ ")"
 												: "")
 										.append("\",\"checked\":")
 										.append(a != null
@@ -586,15 +577,7 @@ public class React16 implements ViewAdapter {
 											.append(",text:\"")
 											.append(LocaleMsgCache.get2(scd,
 													fsm.getDsc()))
-											.append(formResult.getAction() == 2 ? (fsm
-													.getPreviewFlag() != 0 ? " (<i>"
-													+ (LocaleMsgCache.get2(
-															customizationId,
-															xlocale,
-															"with_preview"))
-													+ "</i>)"
-													: "")
-													: "")
+//											.append(formResult.getAction() == 2 ? (fsm.getPreviewFlag() != 0 ? " (<i>" + (LocaleMsgCache.get2( customizationId, xlocale, "with_preview")) + "</i>)" : "") : "")
 											.append("\",checked:")
 											.append(fsm.getConversionTip() == 1
 													|| fsm.getConversionTip() == 0);
@@ -642,6 +625,64 @@ public class React16 implements ViewAdapter {
 					s.append(",\nmanualConversionForms:[")
 							.append(serializeManualConversions(scd,
 									f.get_conversionList())).append("]");
+				}
+			}
+			
+			if (formResult.getApprovalRecord() != null) { // Burası Artık Onay Mekanizması başlamış
+				W5Workflow a = FrameworkCache.getWorkflow(formResult.getScd(), formResult.getApprovalRecord().getApprovalId());
+				if (formResult.getApprovalRecord().getApprovalStepId() == 901) {// kendisi start for approval yapacak
+					if ((a.getManualAppUserIds() == null
+							&& a.getManualAppRoleIds() == null
+							&& GenericUtil
+									.accessControl(scd, formResult
+											.getApprovalRecord()
+											.getApprovalActionTip() /*
+																	 * ??? Bu ne
+																	 */,
+											formResult.getApprovalRecord()
+													.getApprovalRoles(), formResult
+													.getApprovalRecord()
+													.getApprovalUsers()) || (GenericUtil
+							.hasPartInside2(a.getManualAppRoleIds(),
+									scd.get("roleId")) || GenericUtil
+							.hasPartInside2(a.getManualAppUserIds(),
+									scd.get("userId")))) // Burası daha güzel
+															// yazılabilir
+					)// TODO:Buraya tableUserIdField yetki kontrolü eklenecek
+						// (a.getManualAppTableFieldIds())
+						s.append(",\n approval:{approvalRecordId:")
+								.append(formResult.getApprovalRecord()
+										.getApprovalRecordId())
+								.append(",wait4start:true,dynamic:")
+								.append(a.getApprovalFlowTip() == 3).append("}");
+				} else if (GenericUtil.accessControl(scd, (short) 1, formResult
+						.getApprovalRecord().getApprovalRoles(), formResult
+						.getApprovalRecord().getApprovalUsers())) {
+					s.append(",\n approval:{approvalRecordId:").append(formResult.getApprovalRecord()
+							.getApprovalRecordId()).append(",versionNo:")
+					.append(formResult.getApprovalRecord().getVersionNo())
+					.append(",returnFlag:")
+					.append(formResult.getApprovalRecord().getReturnFlag() != 0);
+			W5WorkflowStep wfs = a.get_approvalStepMap().get(formResult.getApprovalRecord().getApprovalStepId());
+			if(wfs.getOnApproveFormId()!=null)s.append(",approveFormId:").append(wfs.getOnApproveFormId());
+			if(wfs.getOnRejectFormId()!=null)s.append(",rejectFormId:").append(wfs.getOnRejectFormId());
+			if(wfs.getOnReturnFormId()!=null)s.append(",returnFormId:").append(wfs.getOnReturnFormId());
+			s.append(",stepDsc:'")
+					.append(formResult.getApprovalStep() != null ? GenericUtil
+							.stringToJS(formResult.getApprovalStep()
+									.getDsc()) : "-")
+					.append("'}");
+				}
+			} else { // Onay mekanizması başlamamış ama acaba başlatma isteği manual
+						// yapılabilir mi ? Formun bağlı olduğu tablonun onay
+						// mekanizması manualStart + Elle Başlatma İsteği aktif mi
+//				W5Table t = FrameworkCache.getTable(customizationId, f.getObjectId());
+				if (t != null && t.get_approvalMap() != null
+						&& t.get_approvalMap().get((short) 2) != null) {
+					W5Workflow a = t.get_approvalMap().get((short) 2);
+					if (a.getManualDemandStartAppFlag() != 0
+							&& a.getApprovalRequestTip() == 2)
+						s.append(",\n manualStartDemand:true");
 				}
 			}
 		}
@@ -748,12 +789,7 @@ public class React16 implements ViewAdapter {
 						s.append("{\"xid\":")
 								.append(fsm.getFormSmsMailId())
 								.append(",\"text\":\"")
-								.append(fsm.getSmsMailTip() == 0 ? "[SMS] "
-										: "["
-												+ (LocaleMsgCache.get2(
-														customizationId,
-														xlocale, "email_upper"))
-												+ "] ")
+//								.append(fsm.getSmsMailTip() == 0 ? "[SMS] ": "[" + (LocaleMsgCache.get2(customizationId, xlocale, "email_upper")) + "] ")
 								.append(LocaleMsgCache.get2(customizationId,
 										xlocale, fsm.getDsc()))
 								.append(fsm.getPreviewFlag() != 0 ? " ("
@@ -811,12 +847,7 @@ public class React16 implements ViewAdapter {
 						s.append("{\"xid\":")
 								.append(fsm.getFormSmsMailId())
 								.append(",\"text\":\"")
-								.append(fsm.getSmsMailTip() == 0 ? "[SMS] "
-										: "["
-												+ (LocaleMsgCache.get2(
-														customizationId,
-														xlocale, "email_upper"))
-												+ "] ")
+//								.append(fsm.getSmsMailTip() == 0 ? "[SMS] " : "[" + (LocaleMsgCache.get2( customizationId, xlocale, "email_upper")) + "] ")
 								.append(GenericUtil.stringToJS(fsm.getDsc()))
 								.append(fsm.getPreviewFlag() != 0 ? " ("
 										+ (LocaleMsgCache.get2(
@@ -1125,8 +1156,8 @@ public class React16 implements ViewAdapter {
 			postCode = "";
 		if (!GenericUtil.isEmpty(postCode) && postCode.indexOf("Ext.")==-1) {
 			s.append("try{").append(postCode).append("\n}catch(e){");
-			s.append(FrameworkSetting.debug ? "if(confirm('ERROR form.JS!!! Throw?'))throw e;"
-					: "alert('System/Customization ERROR')");
+			s.append(FrameworkSetting.debug ? "if(confirm('ERROR form.JS!!! Throw? : ' + e.message))throw e;"
+					: "alert('System/Customization ERROR : ' + e.message)");
 			s.append("}\n");
 		}
 
@@ -1270,6 +1301,28 @@ public class React16 implements ViewAdapter {
 					buf.append(",").append(rbuf);
 				buf.append("},");
 			}
+		} else if(o instanceof W5CardResult){
+			W5CardResult gr = (W5CardResult)o;
+			if(gr.getTplObj().getTemplateObjectId()!=parentObjectId && gr.getTplObj().getParentObjectId()==parentObjectId){
+				if(buf.length()==0){
+					buf.append("detailGrids:[");
+				}
+				buf.append("{card:").append(gr.getCard().getDsc());
+				if(gr.getCard().get_crudTable()!=null){
+					W5Table t = gr.getCard().get_crudTable();
+					buf.append(",pk:{").append(t.get_tableParamList().get(0).getDsc()).append(":'").append(t.get_tableParamList().get(0).getExpressionDsc()).append("'}");
+				}
+				if(!GenericUtil.isEmpty(gr.getTplObj().get_srcQueryFieldName()) && !GenericUtil.isEmpty(gr.getTplObj().get_dstQueryParamName())){
+					buf.append(",params:{").append(gr.getTplObj().get_dstQueryParamName()).append(":'").append(gr.getTplObj().get_srcQueryFieldName()).append("'");
+					if(!GenericUtil.isEmpty(gr.getTplObj().getDstStaticQueryParamVal()) && !GenericUtil.isEmpty(gr.getTplObj().get_dstStaticQueryParamName())){
+						buf.append(",").append(gr.getTplObj().get_dstStaticQueryParamName()).append(":'!").append(gr.getTplObj().getDstStaticQueryParamVal()).append("'");
+					}
+					buf.append("}");
+				}
+				StringBuilder rbuf = recursiveTemplateObject(l, gr.getTplObj().getTemplateObjectId(), level+1);
+				if(rbuf!=null && rbuf.length()>0)buf.append(",").append(rbuf);
+				buf.append("},");
+			}
 		}
 		if(buf.length()>0){
 			buf.setLength(buf.length()-1);
@@ -1278,18 +1331,27 @@ public class React16 implements ViewAdapter {
 		return buf;
 	}
 
-	private StringBuilder renderTemplateObject(W5PageResult templateResult) {
-//		return addTab4GridWSearchForm({t:_page_tab_id,grid:grd_online_users1, pk:{tuser_id:'user_id'}});
+	private StringBuilder renderTemplateObject(W5PageResult pr) {
 		StringBuilder buf = new StringBuilder();
-		if(!(templateResult.getTemplateObjectList().get(0) instanceof W5GridResult))return buf;
-		W5GridResult gr = (W5GridResult)templateResult.getTemplateObjectList().get(0);
+		if(pr.getPageObjectList().get(0) instanceof W5CardResult){
+			W5CardResult gr = (W5CardResult)pr.getPageObjectList().get(0);
+			buf.append("return iwb.ui.buildPanel({t:_page_tab_id, card:").append(gr.getCard().getDsc());
+			if(gr.getCard().get_crudTable()!=null){
+				W5Table t = gr.getCard().get_crudTable();
+				buf.append(",pk:{").append(t.get_tableParamList().get(0).getDsc()).append(":'").append(t.get_tableParamList().get(0).getExpressionDsc()).append("'}");
+			}
+			buf.append("});");
+			return buf;
+		}
+		if(!(pr.getPageObjectList().get(0) instanceof W5GridResult))return buf;
+		W5GridResult gr = (W5GridResult)pr.getPageObjectList().get(0);
 		buf.append("return iwb.ui.buildPanel({t:_page_tab_id, grid:").append(gr.getGrid().getDsc());
 		if(gr.getGrid().get_crudTable()!=null){
 			W5Table t = gr.getGrid().get_crudTable();
 			buf.append(",pk:{").append(t.get_tableParamList().get(0).getDsc()).append(":'").append(t.get_tableParamList().get(0).getExpressionDsc()).append("'}");
 		}
-		if(templateResult.getTemplateObjectList().size()>1){
-			StringBuilder rbuf = recursiveTemplateObject(templateResult.getTemplateObjectList(), ((W5GridResult)templateResult.getTemplateObjectList().get(0)).getTplObj().getTemplateObjectId(), 1);
+		if(pr.getPageObjectList().size()>1){
+			StringBuilder rbuf = recursiveTemplateObject(pr.getPageObjectList(), ((W5GridResult)pr.getPageObjectList().get(0)).getTplObj().getTemplateObjectId(), 1);
 			if(rbuf!=null && rbuf.length()>0)
 				buf.append(",").append(rbuf);
 			
@@ -2146,7 +2208,7 @@ public class React16 implements ViewAdapter {
 							buttons.append("iconAlign: 'top', scale:'medium', style:{margin: '0px 5px 0px 5px'},");
 						buttons.append("iconCls:'")
 								.append(toolbarItem.getImgIcon())
-								.append("', click:function(a,b,c){\n")
+								.append("', click:(a,b,c)=>{\n")
 								.append(LocaleMsgCache.filter2(
 										customizationId, xlocale,
 										toolbarItem.getCode())).append("\n}}");
@@ -2155,7 +2217,7 @@ public class React16 implements ViewAdapter {
 						buttons.append("{type:'button'");
 						if(!GenericUtil.isEmpty(toolbarItem.getImgIcon()))buttons.append(", icon:'").append(toolbarItem.getImgIcon()).append("'");
 						buttons.append(", text:'").append(LocaleMsgCache.get2(customizationId,xlocale, toolbarItem.getLocaleMsgKey()))
-								.append("', click:function(a,b,c){\n")
+								.append("', click:(a,b,c)=>{\n")
 								.append(LocaleMsgCache.filter2(
 										customizationId, xlocale,
 										toolbarItem.getCode())).append("\n}}");
@@ -2317,41 +2379,31 @@ public class React16 implements ViewAdapter {
 		return html;
 	}
 
-	public StringBuilder serializeDataView(W5DataViewResult dataViewResult) {
+	public StringBuilder serializeCard(W5CardResult dataViewResult) {
 		String xlocale = (String) dataViewResult.getScd().get("locale");
 		int customizationId = (Integer) dataViewResult.getScd().get(
 				"customizationId");
-		W5DataView d = dataViewResult.getDataView();
+		W5Card d = dataViewResult.getCard();
 		StringBuilder buf = new StringBuilder();
-		buf.append("var ")
+		buf.append("\nvar ")
 				.append(d.getDsc())
-				.append("={dataViewId:")
+				.append("={cardId:")
 				.append(d.getDataViewId())
 				.append(",name:'")
 				.append(LocaleMsgCache.get2(customizationId, xlocale,
 						d.getLocaleMsgKey()))
 				.append("'")
-				.append(",store: new Ext.data.JsonStore({url:'ajaxQueryData?.w='+_webPageId+'&_qid=")
+				.append(",_url:'ajaxQueryData?.w='+_webPageId+'&_qid=")
 				.append(d.getQueryId()).append("&_dvid=")
 				.append(d.getDataViewId());
 
 		if (d.getDefaultPageRecordNumber() != 0)
-			buf.append("&firstLimit=").append(d.getDefaultPageRecordNumber())
-					.append("',remoteSort:true,");
-		else
-			buf.append("',");
-		buf.append(
-				serializeQueryReader(d.get_query().get_queryFields(), d
-						.get_pkQueryField().getDsc(), null, null, (d
-						.get_query().getShowParentRecordFlag() != 0 ? 2 : 0), d
-						.get_mainTable(), dataViewResult.getScd())).append(
-				",listeners:{loadexception:promisLoadException");
-		// if(d.getDefaultPageRecordNumber()!=0)buf.append(",afterload:function(aa,bb){alert('geldim');alert(aa.getCount())}");
-		buf.append("}})");
+			buf.append("&firstLimit=").append(d.getDefaultPageRecordNumber());
+		buf.append("'");
 		if (d.getDefaultWidth() != 0)
-			buf.append(",\n defaultWidth:").append(d.getDefaultWidth());
+			buf.append(", defaultWidth:").append(d.getDefaultWidth());
 		if (d.getDefaultHeight() != 0)
-			buf.append(",\n defaultHeight:").append(d.getDefaultHeight());
+			buf.append(", defaultHeight:").append(d.getDefaultHeight());
 		if (dataViewResult.getSearchFormResult() != null) {
 			buf.append(",\n searchForm:").append(
 					serializeGetForm(dataViewResult.getSearchFormResult()));
@@ -2364,24 +2416,22 @@ public class React16 implements ViewAdapter {
 				buf.append(",\n extraButtons:[").append(buttons).append("]");
 			}
 		}
+		
+		if (!GenericUtil.isEmpty(d.get_menuItemList() )) { // menu (rightClick) buttonlari
+			StringBuilder buttons = serializeMenuItems(dataViewResult.getScd(), d.get_menuItemList());
+			if (buttons != null && buttons.length() > 1) {
+				buf.append(",\n menuButtons:[").append(buttons).append("]");
+			}
+		}
 
 		if (d.getDefaultPageRecordNumber() != 0)
 			buf.append(",\n pageSize:").append(d.getDefaultPageRecordNumber());
 		// buf.append(",\n tpl:'<tpl for=\".\">").append(PromisUtil.stringToJS(d.getTemplateCode())).append("</tpl>',\nautoScroll:true,overClass:'x-view-over',itemSelector:'table.grid_detay'};\n");
-		buf.append(",\n tpl:\"")
-				.append(GenericUtil.stringToJS2(d.getTemplateCode()))
-				.append("\",\nautoScroll:true,overClass:\"x-view-over\",itemSelector:\"table.grid_detay\"};\n");
-		if (!GenericUtil.isEmpty(d.getJsCode())) {
-			buf.append("\ntry{")
-					.append(GenericUtil.filterExt(d.getJsCode(),
-							dataViewResult.getScd(),
-							dataViewResult.getRequestParams(), null))
-					.append("\n}catch(e){")
-					.append(FrameworkSetting.debug ? "if(confirm('ERROR dataView.JS!!! Throw?'))throw e;"
-							: "alert('System/Customization ERROR')");
-			buf.append("}\n");
-		}
-		return buf;
+		buf.append(",\n render(props){\n")
+				.append(d.getTemplateCode())
+				.append("\n}");
+		
+		return buf.append("}");
 	}
 
 	public StringBuilder serializeListView(W5ListViewResult listViewResult) {
@@ -2412,9 +2462,9 @@ public class React16 implements ViewAdapter {
 						.get_mainTable(), listViewResult.getScd())).append(
 				",listeners:{loadexception:promisLoadException}})");
 		if (d.getDefaultWidth() != 0)
-			buf.append(",\n defaultWidth:").append(d.getDefaultWidth());
+			buf.append(", defaultWidth:").append(d.getDefaultWidth());
 		if (d.getDefaultHeight() != 0)
-			buf.append(",\n defaultHeight:").append(d.getDefaultHeight());
+			buf.append(", defaultHeight:").append(d.getDefaultHeight());
 		switch (d.getSelectionTip()) {
 		// case 0:buf.append(",\n singleSelect:false");break;
 		case 1:
@@ -2444,8 +2494,8 @@ public class React16 implements ViewAdapter {
 							listViewResult.getScd(),
 							listViewResult.getRequestParams(), null))
 					.append("\n}catch(e){")
-					.append(FrameworkSetting.debug ? "if(confirm('ERROR listView.JS!!! Throw?'))throw e;"
-							: "alert('System/Customization ERROR')");
+					.append(FrameworkSetting.debug ? "if(confirm('ERROR listView.JS!!! Throw? : ' + e.message))throw e;"
+							: "alert('System/Customization ERROR : ' + e.message)");
 			buf.append("}\n");
 		}
 		buf.append(serializeListColumns(listViewResult));
@@ -2482,23 +2532,23 @@ public class React16 implements ViewAdapter {
 		}
 
 			
-		if (FrameworkSetting.liveSyncRecord && g.get_viewTable() != null && g.get_viewTable().getLiveSyncFlag() != 0)
+		if (false && FrameworkSetting.liveSyncRecord && g.get_viewTable() != null && g.get_viewTable().getLiveSyncFlag() != 0)
 			buf.append(",\n liveSync:true");
 		if (g.getDefaultWidth() != 0)
-			buf.append(",\n defaultWidth:").append(g.getDefaultWidth());
+			buf.append(", defaultWidth:").append(g.getDefaultWidth());
 		if (gridResult.isViewLogMode())
-			buf.append(",\n defaultHeight:").append(
+			buf.append(", defaultHeight:").append(
 					FrameworkCache.getAppSettingIntValue(scd,
 							"log_default_grid_height"));
 		else {
 			if (g.getSelectionModeTip() == 2 || g.getSelectionModeTip() == 3) // multi Select
 				buf.append(",\n selectRow:{mode: 'checkbox',clickToSelect: true}");
 			if (g.getDefaultHeight() > 0)
-				buf.append(",\n defaultHeight:").append(g.getDefaultHeight());
+				buf.append(", defaultHeight:").append(g.getDefaultHeight());
 
 			buf.append(",\n gridReport:").append(FrameworkCache.roleAccessControl(scd, 105));
 		}
-		buf.append(",\n loading:!0, displayInfo:").append(g.getDefaultPageRecordNumber()>0);
+//		buf.append(",\n loading:!0, displayInfo:").append(g.getDefaultPageRecordNumber()>0);
 		
 
 		if (!GenericUtil.isEmpty(g.get_crudFormSmsMailList())) {
@@ -2518,7 +2568,7 @@ public class React16 implements ViewAdapter {
 					buf.append("{xid:")
 							.append(fsm.getFormSmsMailId())
 							.append(",text:\"")
-							.append(fsm.getSmsMailTip() == 0 ? "[SMS] " : "[" + (LocaleMsgCache.get2(customizationId, xlocale,"email_upper")) + "] ")
+//							.append(fsm.getSmsMailTip() == 0 ? "[SMS] " : "[" + (LocaleMsgCache.get2(customizationId, xlocale,"email_upper")) + "] ")
 							.append(GenericUtil.stringToJS(LocaleMsgCache.get2(customizationId, xlocale, fsm.getDsc())))
 							.append("\",smsMailTip:")
 							.append(fsm.getSmsMailTip()).append("}");
@@ -2581,9 +2631,9 @@ public class React16 implements ViewAdapter {
 						t.getAccessInsertUsers());
 				buf.append(",\n crudFormId:")
 						.append(g.getDefaultCrudFormId())
-						.append(",\n crudTableId:")
+						.append(", crudTableId:")
 						.append(t.getTableId())
-						.append(",\n crudFlags:{insert:")
+						.append(", crudFlags:{insert:")
 						.append(insertFlag)
 						.append(",edit:")
 						.append(t.getAccessUpdateUserFields() != null
@@ -2683,8 +2733,8 @@ public class React16 implements ViewAdapter {
 					.append(GenericUtil.filterExt(g.getJsCode(), scd,
 							gridResult.getRequestParams(), null))
 					.append("\n}catch(e){")
-					.append(FrameworkSetting.debug ? "if(confirm('ERROR grid.JS!!! Throw?'))throw e;"
-							: "alert('System/Customization ERROR')");
+					.append(FrameworkSetting.debug ? "if(confirm('ERROR grid.JS!!! Throw? : ' + e.message))throw e;"
+							: "alert('System/Customization ERROR : ' + e.message)");
 			buf.append("}\n");
 		}
 		return buf;
@@ -3213,7 +3263,9 @@ columns:[
 				buf.append(", renderer:strShortDate");// browser renderer ise
 			else if (qds.length() > 5 && qds.indexOf("_dttm") == qds.length() - 5){
 				buf.append(", renderer:strDateTime").append(FrameworkCache.getAppSettingIntValue(0, "fmt_date_time_ago_flag")!=0 ?"Ago":"");// browser renderer ise
-			} else if (qds.length() > 5 && qds.endsWith("_flag")) {
+			} else if ((qds.length() > 5
+					&& qds.endsWith("_flag")) || (qds.length() > 3
+							&& qds.startsWith("is_"))) {
 				buf.append(", formatter:disabledCheckBoxHtml");// browser renderer ise
 				boolRendererFlag = true;
 			} else if (grid.get_queryFieldMapDsc().get(qds + "_qw_") != null) {
@@ -3960,16 +4012,14 @@ columns:[
 										&& ozs[3].length() > 0) {// roleIds
 									buf.append("\",\"app_role_ids_qw_\":\"");
 									String[] roleIds = ozs[3].split(",");
-									for (String rid : roleIds) {
+									Map<Integer, String> roles = FrameworkCache.wRoles.get(customizationId);
+									if(roles!=null)for (String rid : roleIds) {
 										buf.append(
-												FrameworkCache.wRoles.get(
-														customizationId).get(
-														GenericUtil.uInt(rid)) != null ? FrameworkCache.wRoles
-														.get(customizationId)
-														.get(GenericUtil
+												roles.get(
+														GenericUtil.uInt(rid)) != null ? roles.get(GenericUtil
 																.uInt(rid))
 														: "null").append(", ");
-									}
+									} else buf.append("null, ");
 									buf.setLength(buf.length() - 2);
 								}
 								if (ozs.length > 4 && ozs[4] != null
@@ -4039,7 +4089,7 @@ columns:[
 
 	public StringBuilder serializeTemplate(W5PageResult pr) {
 		boolean replacePostJsCode = false;
-		W5Page template = pr.getPage();
+		W5Page page = pr.getPage();
 
 		StringBuilder buf = new StringBuilder();
 		StringBuilder postBuf = new StringBuilder();
@@ -4047,9 +4097,10 @@ columns:[
 		int customizationId = (Integer) pr.getScd().get(
 				"customizationId");
 		String xlocale = (String) pr.getScd().get("locale");
-		if (template.getTemplateTip() != 0) { // html degilse
+		if (page.getTemplateTip() != 0) { // html degilse
 			// notification Control
 			// masterRecord Control
+			
 			if (pr.getMasterRecordList() != null
 					&& !pr.getMasterRecordList().isEmpty())
 				buf.append("\n_mrl=")
@@ -4068,10 +4119,24 @@ columns:[
 				buf.append("var _page_tab_id='")
 						.append(GenericUtil.getNextId("tpi")).append("';\n");
 			}
+			
+			if(!GenericUtil.isEmpty(pr.getPage().getCssCode()) && pr.getPage().getCssCode().trim().length()>3){
+				buf.append("iwb.addCssString(\"")
+				.append(GenericUtil.stringToJS2(pr.getPage().getCssCode().trim())).append("\",").append(pr.getTemplateId()).append(");\n");
+			}
+			
+			if (page.getTemplateTip() != 8) { // wizard degilse
+				for (Object i : pr.getPageObjectList()) if(i instanceof W5Component){
+					W5Component c = (W5Component)i;
+					buf.append("\nvar ").append(c.getDsc()).append("= React.lazy(()=>iwb.import('comp/").append(c.getComponentId()).append(".js?.x='));");
+					if(!GenericUtil.isEmpty(c.getCssCode()))buf.append("\n iwb.addCss('comp/").append(c.getComponentId()).append(".css?.x=',").append(c.getComponentId()).append(");");
+					
+				}
+			}
 
-			if (template.getTemplateTip() != 8) { // wizard degilse
+			if (page.getTemplateTip() != 8) { // wizard degilse
 				int customObjectCount = 1, tabOrder = 1;
-				for (Object i : pr.getTemplateObjectList()) {
+				for (Object i : pr.getPageObjectList()) {
 					if (i instanceof W5GridResult) { // objectTip=1
 						W5GridResult gr = (W5GridResult) i;
 						buf.append(serializeGrid(gr));
@@ -4086,13 +4151,13 @@ columns:[
 									.append(gr.getGrid().getDsc()).append("\n");
 						}
 						// if(replacePostJsCode)
-					} else if (i instanceof W5DataViewResult) {// objectTip=2
-						W5DataViewResult dr = (W5DataViewResult) i;
-						buf.append(serializeDataView(dr));
+					} else if (i instanceof W5CardResult) {// objectTip=2
+						W5CardResult dr = (W5CardResult) i;
+						buf.append(serializeCard(dr));
 						if (dr.getDataViewId() < 0) {
-							buf.append("\nvar _dataView")
+							buf.append("\nvar _card")
 									.append(customObjectCount++).append("=")
-									.append(dr.getDataView().getDsc())
+									.append(dr.getCard().getDsc())
 									.append("\n");
 						}
 					} else if (i instanceof W5ListViewResult) {// objectTip=7
@@ -4108,7 +4173,7 @@ columns:[
 						W5FormResult fr = (W5FormResult) i;
 						if (Math.abs(fr.getObjectTip()) == 3) { // form
 							buf.append("\nvar ").append(fr.getForm().getDsc())
-									.append("=").append(serializeGetForm(fr));
+									.append("= class bodyForm extends XForm").append(serializeGetForm(fr));
 						}
 						if (fr.getFormId() < 0) {
 							buf.append("\nvar _form")
@@ -4119,7 +4184,7 @@ columns:[
 						buf.append("\nvar ")
 								.append(((W5GlobalFuncResult) i).getGlobalFunc()
 										.getDsc()).append("=")
-								.append(serializeDbFunc((W5GlobalFuncResult) i))
+								.append(serializeGlobalFunc((W5GlobalFuncResult) i))
 								.append("\n");
 					} else if (i instanceof W5QueryResult) {
 						buf.append("\nvar ")
@@ -4127,6 +4192,13 @@ columns:[
 								.append("=")
 								.append(serializeQueryData((W5QueryResult) i))
 								.append("\n");
+					}  else if (i instanceof W5BIGraphDashboard) {
+						W5BIGraphDashboard gd = (W5BIGraphDashboard) i;
+						buf.append("\nvar graph")
+								.append(gd.getGraphDashboardId())
+								.append("=")
+								.append(serializeGraphDashboard(gd, pr.getScd()))
+								.append(";\n");
 					} else if (i instanceof String) {
 						buf.append("\nvar ").append(i).append("={}");
 					}
@@ -4135,7 +4207,7 @@ columns:[
 			} else { // wizard
 				buf.append("\nvar templateObjects=[");
 				boolean b = false;
-				for (W5PageObject o : template.get_pageObjectList()) {
+				for (W5PageObject o : page.get_pageObjectList()) {
 					if (b)
 						buf.append(",\n");
 					else
@@ -4152,7 +4224,7 @@ columns:[
 			if (replacePostJsCode) {
 
 			} else
-				code = template.getCode();
+				code = page.getCode();
 		} else {
 			StringBuilder buf2 = new StringBuilder();
 			buf2.append("var _webPageId='").append(GenericUtil.getNextId("wpi"))
@@ -4199,16 +4271,16 @@ columns:[
 				buf2.append("};\n");
 			}*/
 			int customObjectCount=1;
-			for (Object i : pr.getTemplateObjectList()) {
+			for (Object i : pr.getPageObjectList()) {
 				if (i instanceof W5GridResult) {
 					W5GridResult gr = (W5GridResult) i;
 					buf2.append(serializeGrid(gr));
 					buf2.append("\nvar _grid")
 					.append(customObjectCount++).append("=")
 					.append(gr.getGrid().getDsc()).append(";\n");
-				} else if (i instanceof W5DataViewResult) {// objectTip=2
-					W5DataViewResult dr = (W5DataViewResult) i;
-					buf2.append(serializeDataView(dr));
+				} else if (i instanceof W5CardResult) {// objectTip=2
+					W5CardResult dr = (W5CardResult) i;
+					buf2.append(serializeCard(dr));
 				} else if (i instanceof W5ListViewResult) {// objectTip=7
 					W5ListViewResult lr = (W5ListViewResult) i;
 					buf2.append(serializeListView(lr));
@@ -4223,7 +4295,7 @@ columns:[
 					buf2.append("\nvar ")
 							.append(((W5GlobalFuncResult) i).getGlobalFunc()
 									.getDsc()).append("=")
-							.append(serializeDbFunc((W5GlobalFuncResult) i))
+							.append(serializeGlobalFunc((W5GlobalFuncResult) i))
 							.append(";\n");
 				} else if (i instanceof W5QueryResult) {
 					buf2.append("\nvar ")
@@ -4231,28 +4303,17 @@ columns:[
 							.append("=")
 							.append(serializeQueryData((W5QueryResult) i))
 							.append(";\n");
+				} else if (i instanceof W5BIGraphDashboard) {
+					W5BIGraphDashboard gd = (W5BIGraphDashboard) i;
+					buf2.append("\nvar graph")
+							.append(gd.getGraphDashboardId())
+							.append("=")
+							.append(serializeGraphDashboard(gd, pr.getScd()))
+							.append(";\n");
 				} else if (i instanceof String) {
 					buf2.append("\nvar ").append(i).append("={};");
 				}
 				buf2.append("\n");
-			}
-			StringBuilder buf4 = new StringBuilder();
-			if (pr.getScd().containsKey("userId")) { // login olmus
-																	// demek ki
-				buf2.append("\nvar _widgetMap={};\n");
-
-				if (template.getCode().contains("${gridColorCss}")) {
-					buf4.append("<style type=\"text/css\">\n");
-					W5LookUp c = FrameworkCache.getLookUp(pr.getScd(), 665);
-					for (W5LookUpDetay d : c.get_detayList()) {
-						buf4.append(".bgColor")
-								.append(d.getVal().replace("#", ""))
-								.append("{background-color:")
-								.append(d.getVal()).append(";}\n");
-					}
-					buf4.append("</style>");
-				}
-
 			}
 			StringBuilder buf3 = new StringBuilder();
 			buf3.append("var _localeMsg=")
@@ -4262,9 +4323,26 @@ columns:[
 					.append("\n");
 			// buf3.append("function getLocMsg(key){if(key==null)return '';var val=_localeMsg[key];return val || key;}\n");
 //			buf3.append("var _CompanyLogoFileId=1;\n");
-			code = template.getCode().replace("${promis}", buf2.toString())
-					.replace("${localemsg}", buf3.toString())
-					.replace("${gridColorCss}", buf4.toString());
+			code = page.getCode().replace("${promis}", buf2.toString())
+					.replace("${localemsg}", buf3.toString());
+			if (page.getCode().contains("${promis-css}")) {
+				StringBuilder buf4 = new StringBuilder();
+
+				if(!GenericUtil.isEmpty(page.getCssCode()) && page.getCssCode().trim().length()>3){
+					buf4.append(page.getCssCode()).append("\n");
+				}
+				W5LookUp c = FrameworkCache.getLookUp(pr.getScd(), 665);
+				for (W5LookUpDetay d : c.get_detayList()) {
+					buf4.append(".bgColor")
+							.append(d.getVal().replace("#", ""))
+							.append("{background-color:")
+							.append(d.getVal()).append(";}\n");
+				}
+				FrameworkCache.addPageCss(pr.getScd(), page.getTemplateId(), buf4.toString());
+				code = code.replace("${promis-css}", " <link rel=\"stylesheet\" type=\"text/css\" href=\"/app/dyn-res/"+page.getTemplateId()+".css?.x="+page.getVersionNo()+"\" />");
+
+			}
+			
 		}
 		/*
 		 * if(templateResult.getTemplateId()==2){ // ana sayfa Map<String,
@@ -4280,12 +4358,90 @@ columns:[
 		if(!GenericUtil.isEmpty(code))
 			buf.append("\n").append(code.startsWith("!") ? code.substring(1) : code);
 
-		short ttip= pr.getPage().getTemplateTip();
-		if((ttip==2 || ttip==4) && !GenericUtil.isEmpty(pr.getTemplateObjectList()))buf.append("\n").append(renderTemplateObject(pr));
+		if(!GenericUtil.isEmpty(pr.getPageObjectList()))switch(pr.getPage().getTemplateTip()){
+		case	2:case	4://page, pop up
+			buf.append("\n").append(renderTemplateObject(pr));
+			break;
+		case	10://dashboard
+			buf.append("\n").append(renderDashboardObject(pr));
+			break;
+			
+		}
 		
-		return template.getLocaleMsgFlag() != 0 ? GenericUtil.filterExt(
+		return page.getLocaleMsgFlag() != 0 ? GenericUtil.filterExt(
 				buf.toString(), pr.getScd(),
 				pr.getRequestParams(), null) : buf;
+	}
+	private StringBuilder serializeGraphDashboard(W5BIGraphDashboard gd, Map<String, Object> scd){
+		StringBuilder buf = new StringBuilder();
+		buf.append("{graphId:").append(gd.getGraphDashboardId())
+		 .append(",name:'").append(LocaleMsgCache.get2(scd, gd.getLocaleMsgKey())).append("', gridId:").append(gd.getGridId()).append(",tableId:").append(gd.getTableId())
+		 .append(",is3d:").append(gd.getIs3dFlag()!=0).append(",dtTip:").append(gd.getDtTip())
+		.append(",graphTip:").append(gd.getGraphTip()).append(",groupBy:'").append(gd.getGraphGroupByField()).append("',funcTip:").append(gd.getGraphFuncTip()).append(",funcFields:'").append(gd.getGraphFuncFields())
+		.append("', queryParams:").append(gd.getQueryBaseParams());
+		if(gd.getStackedQueryField()!=0)buf.append(",stackedFieldId:").append(gd.getStackedQueryField());
+		if(gd.getDefaultHeight()!=0)buf.append(",height:").append(gd.getDefaultHeight());
+		if(gd.getLegendFlag()!=0)buf.append(",legend:true");
+		buf.append("}");
+		return buf;
+	}
+	
+	private Object renderDashboardObject(W5PageResult pr) {
+		StringBuilder buf = new StringBuilder();
+		if(GenericUtil.isEmpty(pr.getPageObjectList()))return buf;
+		buf.append("return iwb.ui.buildDashboard({t:_page_tab_id, rows:[");
+		int rowId=-1;
+		for(Object o:pr.getPageObjectList())if(o!=null){
+			W5PageObject po = null;
+			StringBuilder rbuf = new StringBuilder();
+			if(o instanceof W5GridResult){
+				W5GridResult gr = (W5GridResult)o;
+				po = gr.getTplObj();
+				rbuf.append("{grid:").append(gr.getGrid().getDsc());
+				
+			} else if(o instanceof W5BIGraphDashboard){
+				W5BIGraphDashboard gr = (W5BIGraphDashboard)o;
+				rbuf.append("{graph:graph").append(gr.getGraphDashboardId());
+				for(W5PageObject po2:pr.getPage().get_pageObjectList())if(po2.getObjectId()==gr.getGraphDashboardId()){
+					po = po2;
+					break;
+				}
+			} else if(o instanceof W5QueryResult){
+				W5QueryResult qr = (W5QueryResult)o;
+				rbuf.append("{query:").append(qr.getQuery().getDsc());
+				for(W5PageObject po2:pr.getPage().get_pageObjectList())if(po2.getObjectId()==qr.getQueryId()){
+					po = po2;
+					break;
+				}
+			} else if(o instanceof W5CardResult){
+				W5CardResult cr = (W5CardResult)o;
+				rbuf.append("{card:").append(cr.getCard().getDsc());
+				for(W5PageObject po2:pr.getPage().get_pageObjectList())if(po2.getObjectId()==cr.getDataViewId()){
+					po = po2;
+					break;
+				}
+//				po = cr.getTplObj();TODO
+			}
+			if(po!=null){
+				int currentRowID = po.getTabOrder()/1000;
+				if(currentRowID!=rowId){
+					if(rowId>-1){
+						buf.append("],");
+					}
+					buf.append("[");
+				}
+				if(!GenericUtil.isEmpty(po.getPostJsCode())){
+					rbuf.append(",props:{").append(po.getPostJsCode()).append("}");
+				}
+				rbuf.append("}");
+				if(rowId == currentRowID)buf.append(",");
+				buf.append(rbuf);
+				rowId= currentRowID;
+			}
+		}
+		if(rowId!=-1)buf.append("]");
+		buf.append("]});");
+		return buf;
 	}
 
 	public StringBuilder serializeTableRecordInfo(
@@ -4418,7 +4574,7 @@ columns:[
 		return buf;
 	}
 
-	public StringBuilder serializeDbFunc(W5GlobalFuncResult dbFuncResult) {
+	public StringBuilder serializeGlobalFunc(W5GlobalFuncResult dbFuncResult) {
 		String xlocale = (String) dbFuncResult.getScd().get("locale");
 		StringBuilder buf = new StringBuilder();
 		buf.append("{\"success\":").append(dbFuncResult.isSuccess())
@@ -4981,8 +5137,8 @@ columns:[
 				postCode = "";
 			if (!GenericUtil.isEmpty(postCode) && postCode.indexOf("Ext.")==-1) {
 				s.append("try{").append(postCode).append("\n}catch(e){");
-				s.append(FrameworkSetting.debug ? "if(confirm('ERROR form.JS!!! Throw?'))throw e;"
-						: "alert('System/Customization ERROR')");
+				s.append(FrameworkSetting.debug ? "if(confirm('ERROR form.JS!!! Throw? : ' + e.message))throw e;"
+						: "alert('System/Customization ERROR : ' + e.message)");
 				s.append("}\n");
 			}
 	

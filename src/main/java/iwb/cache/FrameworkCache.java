@@ -9,38 +9,37 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.redisson.Redisson;
+import org.redisson.api.RedissonClient;
+import org.redisson.config.Config;
+
 import iwb.domain.db.Log5Feed;
 import iwb.domain.db.M5List;
-import iwb.domain.db.W5Workflow;
+import iwb.domain.db.W5Card;
+import iwb.domain.db.W5Component;
 import iwb.domain.db.W5Conversion;
 import iwb.domain.db.W5Customization;
-import iwb.domain.db.W5DataView;
-import iwb.domain.db.W5GlobalFunc;
 import iwb.domain.db.W5Form;
+import iwb.domain.db.W5GlobalFunc;
 import iwb.domain.db.W5Grid;
 import iwb.domain.db.W5JobSchedule;
 import iwb.domain.db.W5List;
 import iwb.domain.db.W5LookUp;
+import iwb.domain.db.W5Page;
 import iwb.domain.db.W5Project;
 import iwb.domain.db.W5Query;
 import iwb.domain.db.W5QueryField;
 import iwb.domain.db.W5Table;
 import iwb.domain.db.W5TableAccessConditionSql;
-import iwb.domain.db.W5TableChild;
-import iwb.domain.db.W5TableParam;
 import iwb.domain.db.W5TableEvent;
-import iwb.domain.db.W5TableField;
-import iwb.domain.db.W5TableFieldCalculated;
-import iwb.domain.db.W5Page;
 import iwb.domain.db.W5TsMeasurement;
 import iwb.domain.db.W5TsPortlet;
+import iwb.domain.db.W5Workflow;
 import iwb.domain.db.W5Ws;
 import iwb.domain.db.W5WsMethod;
 import iwb.domain.db.W5WsServer;
-import iwb.domain.helper.W5TableRecordHelper;
 import iwb.exception.IWBException;
 import iwb.util.GenericUtil;
-import iwb.util.UserUtil;
 
 public class FrameworkCache {
 
@@ -50,23 +49,23 @@ public class FrameworkCache {
 	final private static Map<String, Map<Integer, W5Grid>> wGrids = new HashMap<String, Map<Integer, W5Grid>>();
 	final private static Map<String, Map<Integer, W5List>> wListViews = new HashMap<String, Map<Integer, W5List>>();
 	final private static Map<String, Map<Integer, M5List>> mListViews = new HashMap<String, Map<Integer, M5List>>();
-	final private static Map<String, Map<Integer, W5DataView>> wDataViews = new HashMap<String, Map<Integer, W5DataView>>();
+	final private static Map<String, Map<Integer, W5Card>> wCards = new HashMap<String, Map<Integer, W5Card>>();
 	final private static Map<String, Map<Integer, W5Form>> wForms = new HashMap<String, Map<Integer, W5Form>>();
 	final private static Map<String, Map<Integer, W5GlobalFunc>> wGlobalFuncs = new HashMap<String, Map<Integer, W5GlobalFunc>>();
 	final private static Map<String, Map<Integer, W5Page>> wTemplates = new HashMap<String, Map<Integer, W5Page>>();
+	final private static Map<String, Map<Integer, W5Component>> wComponents = new HashMap<String, Map<Integer, W5Component>>();
 
 	final private static Map<String, Map<Integer, W5Table>> wTables = new HashMap<String, Map<Integer, W5Table>>();
-	final private static Map<String, Map<Integer, List<W5TableField>>> wTableFields = new HashMap<String, Map<Integer, List<W5TableField>>>();
-	final private static Map<String, Map<Integer, List<W5TableFieldCalculated>>> wTableFieldCalculateds = new HashMap<String, Map<Integer, List<W5TableFieldCalculated>>>();
-	final private static Map<String, Map<Integer, List<W5TableParam>>> wTableParams = new HashMap<String, Map<Integer, List<W5TableParam>>>();
 	final private static Map<String, Map<Integer, List<W5TableEvent>>> wTableEvents = new HashMap<String, Map<Integer,List<W5TableEvent>>>();	
-	final private static Map<String, Map<Integer, List<W5TableChild>>> wTableChilds = new HashMap<String, Map<Integer,List<W5TableChild>>>();	
-	final private static Map<String, Map<Integer, List<W5TableChild>>> wTableParents = new HashMap<String, Map<Integer,List<W5TableChild>>>();	
 /*	final private static Map<String, Map<Integer, Integer>> wTableFieldMap = new HashMap<String, Map<Integer, Integer>>();
 	final private static Map<String, List<W5TableParam>> tableParamListMap = new HashMap<String, List<W5TableParam>>();
 	final private static Map<String, List<W5TableChild>> tableChildListMap = new HashMap<String, List<W5TableChild>>();//copy
 	final private static Map<String, List<W5TableChild>> tableParentListMap = new HashMap<String, List<W5TableChild>>();//watch,feed
 */
+	
+	final private static Map<String, Map<Integer, String>> wPageCss = new HashMap<String, Map<Integer, String>>();
+	final private static Map<String, Map<String, Object>> wGraalFuncs = new HashMap<String, Map<String, Object>>();
+
 	final private static Map<String, Map<Integer, W5Workflow>> wWorkflow = new HashMap<String,Map<Integer, W5Workflow>>();
 	final private static List<W5Customization> wCustomization = new ArrayList<W5Customization>();
 	final private static Map<String, W5Project> wProjects = new HashMap<String, W5Project>(); //projectUuid
@@ -119,10 +118,13 @@ public class FrameworkCache {
 		wq = wForms.get(projectId); if(wq!=null)wq.clear();
 		wq = wGlobalFuncs.get(projectId); if(wq!=null)wq.clear();
 		wq = wTemplates.get(projectId); if(wq!=null)wq.clear();
-		wq = wDataViews.get(projectId); if(wq!=null)wq.clear();
+		wq = wCards.get(projectId); if(wq!=null)wq.clear();
 		wq = wListViews.get(projectId); if(wq!=null)wq.clear();
 		wq = mListViews.get(projectId); if(wq!=null)wq.clear();
 		wq = wConversions.get(projectId); if(wq!=null)wq.clear();
+//		wq = wComponents.get(projectId); if(wq!=null)wq.clear();
+		wq = wGraalFuncs.get(projectId); if(wq!=null)wq.clear();
+		
 	}
 
 	
@@ -171,24 +173,39 @@ public class FrameworkCache {
 		return map.get(tableId);
 	}
 	
-	public static W5DataView getDataView(Object o, int dataViewId) {
+	public static W5Card getCard(Object o, int dataViewId) {
 		String projectId = getProjectId(o, "930."+dataViewId);
-		if(!wDataViews.containsKey(projectId)){
-			wDataViews.put(projectId, new HashMap());
+		if(!wCards.containsKey(projectId)){
+			wCards.put(projectId, new HashMap());
 			return null;
 		} else
-			return wDataViews.get(projectId).get(dataViewId);
+			return wCards.get(projectId).get(dataViewId);
 	}
-	public static void addDataView(Object o, W5DataView d){
+	public static void addCard(Object o, W5Card d){
 		int dataViewId = d.getDataViewId();
 		String projectId = getProjectId(o, "930."+dataViewId);
 		//addX((Map)wDataViews, projectId, dataViewId, d);
-		if(wDataViews.get(projectId)==null){
-			wDataViews.put(projectId, new HashMap());
+		if(wCards.get(projectId)==null){
+			wCards.put(projectId, new HashMap());
 		}
-		wDataViews.get(projectId).put(dataViewId, d);
+		wCards.get(projectId).put(dataViewId, d);
 	}
-	
+
+
+	public static W5Component getComponent(Object o, int componentId) {
+		String projectId = getProjectId(o, "3351."+componentId);
+		if(!wComponents.containsKey(projectId)){
+			wComponents.put(projectId, new HashMap());
+			return null;
+		} else
+			return wComponents.get(projectId).get(componentId);
+	}
+	public static void setComponentMap(Object o, Map<Integer, W5Component> m){
+		String projectId = getProjectId(o, null);
+		//addX((Map)wDataViews, projectId, dataViewId, d);
+		wComponents.put(projectId, m);
+	}
+
 	public static W5Workflow getWorkflow(Object o, int approvalId) {
 		String projectId = getProjectId(o, "389."+approvalId);
 		if(!wWorkflow.containsKey(projectId)){
@@ -197,7 +214,20 @@ public class FrameworkCache {
 		} else
 			return wWorkflow.get(projectId).get(approvalId);
 	}
+
+	public static void addWorkflow(Object o, W5Workflow w) {
+		String projectId = getProjectId(o, "389."+w.getApprovalId());
+		if(!wWorkflow.containsKey(projectId)){
+			wWorkflow.put(projectId, new HashMap());
+		} else
+		wWorkflow.get(projectId).put(w.getApprovalId(), w);
+	}
 	
+
+	public static void clearProjectWorkflows(String projectId) {
+		wWorkflow.put(projectId, new HashMap());
+
+	}
 	
 	public static W5WsMethod getWsMethod(Object o, int methodId) {
 		String projectId = getProjectId(o, "1376."+methodId);
@@ -278,6 +308,21 @@ public class FrameworkCache {
 			return wConversions.get(projectId).get(conversionId);
 	}
 	
+	
+	public static List<W5Conversion> listConversion4Form(Object o, int formId, int tableId) {
+		List<W5Conversion> r = new ArrayList();
+		String projectId = getProjectId(o, "40."+formId);
+		if(!wConversions.containsKey(projectId)){
+			wConversions.put(projectId, new HashMap());
+			return r;
+		}
+		Map<Integer, W5Conversion> cMap = wConversions.get(projectId);
+		for(W5Conversion c:cMap.values())if((c.getSrcDstTip()==0 && c.getSrcFormId() == formId) || (c.getSrcDstTip()==1 && c.getSrcTableId()==tableId)){
+			r.add(c);
+		}
+		return r;
+	}
+	
 	public static void addConversion(Object o, W5Conversion cnv){
 		int conversionId = cnv.getConversionId();
 		String projectId = getProjectId(o, "707."+conversionId);
@@ -295,6 +340,15 @@ public class FrameworkCache {
 			return null;
 		} else
 			return mListViews.get(projectId).get(listId);
+	}
+	
+	public static void addMListView(Object o, M5List list) {
+		int listId = list.getListId();
+		String projectId = getProjectId(o, "1345."+listId);
+		if(mListViews.get(projectId)==null){
+			mListViews.put(projectId, new HashMap());
+		}
+		mListViews.get(projectId).put(listId, list);
 	}
 	
 	public static W5Grid getGrid(Object o, int gridId){
@@ -426,22 +480,26 @@ public class FrameworkCache {
 	}
 	
 	public static int getAppSettingIntValue(Object customizationId, String key){
+		if(FrameworkSetting.argMap.containsKey(key))return GenericUtil.uInt(FrameworkSetting.argMap.get(key));
 		Map<String, String> map = appSettings.get(getCustomizationId(customizationId));
 		if(map==null)map = appSettings.get(0);
 		return GenericUtil.uInt(map.get(key));
 	}
 	public static int getAppSettingIntValue(Object customizationId, String key, int defaultValue){
+		if(FrameworkSetting.argMap.containsKey(key))return GenericUtil.uInt(FrameworkSetting.argMap.get(key));
 		Map<String, String> map = appSettings.get(getCustomizationId(customizationId));
 		if(map==null)map = appSettings.get(0);
 		String res = map.get(key);
 		return res==null ? defaultValue : GenericUtil.uInt(res);
 	}
 	public static String getAppSettingStringValue(Object customizationId, String key){
+		if(FrameworkSetting.argMap.containsKey(key))return FrameworkSetting.argMap.get(key);
 		Map<String, String> map = appSettings.get(getCustomizationId(customizationId));
 		if(map==null)map = appSettings.get(0);
 		return map.get(key);
 	}	
 	public static String getAppSettingStringValue(Object customizationId, String key, String defaultValue){
+		if(FrameworkSetting.argMap.containsKey(key))return FrameworkSetting.argMap.get(key);
 		Map<String, String> map = appSettings.get(getCustomizationId(customizationId));
 		if(map==null)map = appSettings.get(0);
 		String res = map.get(key);
@@ -547,6 +605,72 @@ public class FrameworkCache {
 	public static void setWsServersMap(String o, Map m){
 		wWsServers.put(getProjectId(o, null), m);
 	}
+	public static void addPageCss(Object o, int pageId, String css){
+		String p = getProjectId(o,"63."+pageId);
+		Map<Integer, String> m = wPageCss.get(p);
+		if(m==null){
+			m = new HashMap();
+			wPageCss.put(p, m);
+		}
+		m.put(pageId, css);
+	}
+
+	public static String getPageCss(Object o, int pageId){
+		String p = getProjectId(o,"63."+pageId);
+		Map<Integer, String> m = wPageCss.get(p);
+		if(m==null)return "";
+		String css = m.get(pageId);
+		if(css==null)return "";
+		return css;
+	}
+
+	
+	public static String getComponentCss(Object o, int componentId){
+		String p = getProjectId(o,"3351."+componentId);
+		Map<Integer, W5Component> m = wComponents.get(p);
+		if(m==null)return "";
+		W5Component css = m.get(componentId);
+		if(css==null)return "";
+		return css.getCssCode()==null ? "":css.getCssCode();
+	}
+
+	public static String getComponentJs(Object o, int componentId){
+		String p = getProjectId(o,"3351."+componentId);
+		Map<Integer, W5Component> m = wComponents.get(p);
+		if(m==null)return "";
+		W5Component css = m.get(componentId);
+		if(css==null)return "";
+		return css.getCode()==null ? "":css.getCode();
+	}
+
+	private static RedissonClient redissonClient = null;
+	
+	public static RedissonClient getRedissonClient(){
+		if(redissonClient == null){
+			Config config = new Config();
+			config.useSingleServer().setAddress(String.format("redis://%s:%s", FrameworkSetting.redisHost, 6379)).setTimeout(100000).setConnectionMinimumIdleSize(10).setConnectionPoolSize(10);
+			redissonClient = Redisson.create(config);
+		}
+		return redissonClient;
+	}
+
+	public static Object getGraalFunc(Object o, String pk) {
+		String p = getProjectId(o, pk);
+		Map<String, Object> m = wGraalFuncs.get(p);
+		if(m==null)return null;
+		return m.get(pk);
+	}
+
+	public static void addGraalFunc(Object o, String pk, Object func) {
+		String p = getProjectId(o, pk);
+		Map<String, Object> m = wGraalFuncs.get(p);
+		if(m==null) {
+			m = new HashMap();
+			wGraalFuncs.put(p, m);
+		}
+		m.put(pk, func);		
+	}
+
 	
 /*	public static W5TsPortlet getTsPortlet(Map<String, Object> customizationId, int porletId) {
 		int cid = getCustomizationId(customizationId);
